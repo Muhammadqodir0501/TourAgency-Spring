@@ -58,12 +58,6 @@ public class UserRepository {
                 .orElse(null);
     }
 
-   /* public User updateUser(User user) {
-        deleteUser(user);
-        users.put(user.getId(), user);
-        return user;
-    }*/
-
     public User getUserById(UUID id) {
         return users.get(id);
     }

@@ -25,12 +25,6 @@ public class TourRepository {
         return (tours.get(id));
     }
 
-    public Tour updateTour(Tour tour) {
-        deleteTour(tour.getId());
-        tours.put(tour.getId(), tour);
-        return tour;
-    }
-
     public List<Tour> getToursByAgencyId(UUID agencyId) {
         return tours.values().stream()
                 .filter(tour -> tour.getAgencyId().equals(agencyId))

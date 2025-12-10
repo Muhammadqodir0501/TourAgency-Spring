@@ -13,26 +13,40 @@ public class RatingRepository {
     private final Map<UUID, Rating> ratings = new ConcurrentHashMap<>();
     private final Map<UUID, RatingCounter> ratingCounters = new ConcurrentHashMap<>();
 
-    private void addRating(Rating rating) {
+    public void addRating(Rating rating) {
         ratings.put(rating.getId(), rating);
     }
 
-    private void addRatingCounter(RatingCounter ratingCounter) {
-        ratingCounters.put(ratingCounter.getTourId(), ratingCounter);
+    public void addRatingCounter(RatingCounter ratingCounter) {
+        ratingCounters.put(ratingCounter.getId(), ratingCounter);
     }
 
-    private void updateRating(Rating rating) {
+    public void updateRating(Rating rating) {
         ratings.remove(rating.getId());
         ratings.put(rating.getId(), rating);
     }
 
-    private void updateRatingCounter(RatingCounter ratingCounter) {
+    public void updateRatingCounter(RatingCounter ratingCounter) {
         ratingCounters.remove(ratingCounter.getTourId());
         ratingCounters.put(ratingCounter.getTourId(), ratingCounter);
     }
 
-    private RatingCounter getRatingCounter(UUID tourId) {
+    public RatingCounter getRatingCounter(UUID tourId) {
         return ratingCounters.get(tourId);
+    }
+
+    public Rating findRatingByUserAndTourIds(UUID userId, UUID tourId) {
+        return ratings.values().stream()
+                .filter(r -> r.getTourId().equals(tourId) && r.getTourId().equals(userId))
+                .findFirst()
+                .orElse(null);
+    }
+
+    public RatingCounter findRatingCounterByTourId(UUID tourId) {
+        return  ratingCounters.values().stream()
+                .filter(r -> r.getTourId().equals(tourId))
+                .findFirst()
+                .orElse(null);
     }
 
 
