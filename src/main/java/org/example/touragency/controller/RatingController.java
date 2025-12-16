@@ -2,8 +2,9 @@ package org.example.touragency.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.example.touragency.dto.request.RatingDto;
+import org.example.touragency.model.enity.Rating;
 import org.example.touragency.service.abstractions.RatingService;
-import org.example.touragency.service.response.ApiResponse;
+import org.example.touragency.exception.ApiResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -19,10 +20,8 @@ public class RatingController {
     private final RatingService ratingService;
 
     @PostMapping
-    public ResponseEntity<ApiResponse<String>> giveRateToTour(@RequestBody RatingDto ratingDto) {
-            ratingService.addRating(ratingDto);
-
-            ApiResponse<String> response = new ApiResponse<>("Tour has successfully been rated");
-            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    public ResponseEntity<ApiResponse<?>> giveRateToTour(@RequestBody RatingDto ratingDto) {
+        Rating rating =  ratingService.addRating(ratingDto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(new ApiResponse<>(rating));
     }
 }
