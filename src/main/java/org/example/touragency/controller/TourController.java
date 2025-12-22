@@ -49,10 +49,16 @@ public class TourController {
         return ResponseEntity.ok(new ApiResponse<>(tours));
     }
 
-    @GetMapping("/{agencyId}")
+    @GetMapping("/agency")
     public ResponseEntity<ApiResponse<List<TourResponseDto>>> getAllToursByAgency(@PathVariable UUID agencyId) {
         List<TourResponseDto> tours = tourService.getAllToursByAgencyId(agencyId);
         return ResponseEntity.ok(new ApiResponse<>(tours));
+    }
+
+    @GetMapping("/{tourId}")
+    public ResponseEntity<ApiResponse<TourResponseDto>>  getTourById(@PathVariable UUID agencyId, @PathVariable UUID tourId) {
+        TourResponseDto tour = tourService.getTourById(agencyId, tourId);
+        return ResponseEntity.ok(new ApiResponse<>(tour));
     }
 
 

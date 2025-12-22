@@ -54,6 +54,8 @@ public class TourServiceImpl implements TourService {
                 .price(tourAddDto.getPrice())
                 .seatsTotal(tourAddDto.getSeatsTotal())
                 .seatsAvailable(tourAddDto.getSeatsTotal())
+                .isAvailable(true)
+                .views(0L)
                 .build();
 
         tourRepository.addTour(newTour);
@@ -104,6 +106,22 @@ public class TourServiceImpl implements TourService {
         return tourRepository.getAllTours().stream()
                 .map(this::toResponseDto)
                 .toList();
+    }
+
+    @Override
+    public TourResponseDto getTourById(UUID userId, UUID tourId) {
+        Tour tour = tourRepository.getTourById(tourId);
+        if(tour == null) {
+            throw new RuntimeException("Tour not found");
+        }
+
+        User user = userRepository.getUserById(userId);
+        if(user == null) {
+            throw new RuntimeException("User not found");
+        }
+
+        tour.setViews(tour.getViews() + 1L);
+        return toResponseDto(tour);
     }
 
     @Override

@@ -20,13 +20,13 @@ public class BookingController {
 
     @PostMapping("/{tourId}")
     public ResponseEntity<ApiResponse<?>>  addBooking(@PathVariable UUID userId, @PathVariable UUID tourId) {
-        Booking booking = bookingService.addBooking(tourId, userId);
+        Booking booking = bookingService.addBooking(userId,  tourId);
         return ResponseEntity.status(HttpStatus.CREATED).body(new ApiResponse<>(booking));
     }
 
     @DeleteMapping("/{tourId}")
     public ResponseEntity<ApiResponse<?>>  cancelBooking(@PathVariable UUID userId, @PathVariable UUID tourId) {
-        bookingService.cancelBooking(tourId, userId);
+        bookingService.cancelBooking(userId, tourId);
         return ResponseEntity.noContent().build();
     }
 
