@@ -1,7 +1,7 @@
 package org.example.touragency.service.abstractions;
 
-import org.example.touragency.model.enity.FavouriteTour;
-import org.example.touragency.model.enity.Tour;
+import org.example.touragency.model.entity.FavouriteTour;
+import org.example.touragency.model.entity.Tour;
 
 import java.util.List;
 import java.util.UUID;

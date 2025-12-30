@@ -3,7 +3,7 @@ package org.example.touragency.controller;
 import lombok.RequiredArgsConstructor;
 import org.example.touragency.dto.request.UserAddDto;
 import org.example.touragency.dto.response.UserUpdateDto;
-import org.example.touragency.model.enity.User;
+import org.example.touragency.model.entity.User;
 import org.example.touragency.service.abstractions.UserService;
 import org.example.touragency.exception.ApiResponse;
 import org.springframework.http.HttpStatus;

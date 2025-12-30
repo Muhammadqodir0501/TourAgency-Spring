@@ -1,9 +1,9 @@
 package org.example.touragency.service.impl;
 
 import lombok.RequiredArgsConstructor;
-import org.example.touragency.model.enity.Booking;
-import org.example.touragency.model.enity.Tour;
-import org.example.touragency.model.enity.User;
+import org.example.touragency.model.entity.Booking;
+import org.example.touragency.model.entity.Tour;
+import org.example.touragency.model.entity.User;
 import org.example.touragency.repository.BookingRepository;
 import org.example.touragency.repository.TourRepository;
 import org.example.touragency.repository.UserRepository;
@@ -11,6 +11,7 @@ import org.example.touragency.service.abstractions.BookingService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @RequiredArgsConstructor
@@ -25,38 +26,37 @@ public class BookingServiceImpl implements BookingService {
     @Override
     public Booking addBooking(UUID userId, UUID tourId) {
 
-        Tour existTour = tourRepository.getTourById(tourId);
-        if(existTour == null) {
+        Optional<Tour> existTour = tourRepository.findById(tourId);
+        if(existTour.isEmpty()) {
             throw new RuntimeException("Tour not found");
         }
 
-        User existUser = userRepository.getUserById(userId);
-        if(existUser == null) {
+        Optional<User> existUser = userRepository.findById(userId);
+        if(existUser.isEmpty()) {
             throw new RuntimeException("User not found");
         }
 
-        if(!existTour.isAvailable()) {
+        if(!existTour.get().isAvailable()) {
             throw new RuntimeException("Tour not available");
         }
         Booking newBooking = Booking.builder()
-                .userId(existUser.getId())
-                .tourId(existTour.getId())
+                .user(existUser.get())
+                .tour(existTour.get())
                 .build();
 
-        bookingRepository.addBooking(newBooking);
-        tourServiceImpl.tourIsBooked(existTour);
 
-        return newBooking;
+        tourServiceImpl.tourIsBooked(existTour.orElse(null));
+        return bookingRepository.save(newBooking);
     }
 
     @Override
     public List<Booking> getUsersBookings(UUID userId) {
-        return bookingRepository.getUsersBookings(userId);
+        return bookingRepository.findAllBookingsByUserId(userId);
     }
 
     @Override
     public void cancelBooking(UUID userId, UUID tourId) {
         tourServiceImpl.tourBookingIsCanceled(tourId);
-        bookingRepository.removeBooking(userId, tourId);
+        bookingRepository.deleteByUserIdAndTourId(userId, tourId);
     }
 }

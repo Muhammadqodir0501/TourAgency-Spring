@@ -1,66 +1,81 @@
 package org.example.touragency.repository;
 
-import org.example.touragency.model.Role;
-import org.example.touragency.model.enity.User;
+import org.example.touragency.model.entity.User;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
 import org.springframework.stereotype.Repository;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
+
 
 @Repository
-public class UserRepository {
+public class UserRepository extends AbstractHibernateRepository {
 
-    public UserRepository() {
-        addDefaultUsers();
+    public UserRepository(SessionFactory sessionFactory) {
+        super(sessionFactory);
     }
 
-    private final Map<UUID, User> users = new ConcurrentHashMap<>();
-
-    private  void addDefaultUsers() {
-        User user1 = new User();
-        user1.setFullName("John Doe");
-        user1.setEmail("john@example.com");
-        user1.setPassword("password123");
-        user1.setPhoneNumber("+998946780090");
-        user1.setRole(Role.USER);
-
-        User user2 = new User();
-        user2.setFullName("Admin Boss");
-        user2.setEmail("admin@example.com");
-        user2.setPassword("admin123");
-        user2.setPhoneNumber("+998965432100");
-        user2.setRole(Role.AGENCY);
-
-        users.put(user1.getId(), user1);
-        users.put(user2.getId(), user2);
+    public User save(User user) {
+        return executeInTransaction(session -> {
+            session.persist(user);
+            //  session.merge(user); update user
+            return user;
+        });
     }
 
-    public User addUser(User user) {
-        users.put(user.getId(), user);
-        return user;
+    public User update(User user) {
+        return executeInTransaction(session -> {
+            session.merge(user);
+            return user;
+        });
     }
 
-    public void deleteUser(User user) {
-        users.remove(user.getId());
+    // Найти по ID
+    public Optional<User> findById(UUID id) {
+        return executeInTransaction((Function<Session, Optional<User>>) session ->
+                Optional.ofNullable(session.get(User.class, id))
+        );
     }
 
-    public User findByPhoneNumber(String phoneNumber) {
-        return users.values().stream()
-                .filter(user -> phoneNumber != null &&
-                        phoneNumber.equals(user.getPhoneNumber()))
-                .findFirst()
-                .orElse(null);
+    public Optional<User> findByEmail(String email) {
+        return executeInTransaction((Function<Session, Optional<User>>) session ->
+                session.createQuery("FROM User WHERE email = :email", User.class)
+                        .setParameter("email", email)
+                        .uniqueResultOptional()
+        );
     }
 
-    public User getUserById(UUID id) {
-        return users.get(id);
+    public Optional<User> findByPhoneNumber(String phoneNumber) {
+        return executeInTransaction((Function<Session, Optional<User>>) session ->
+                session.createQuery("FROM User WHERE phoneNumber = :phone", User.class)
+                        .setParameter("phone", phoneNumber)
+                        .uniqueResultOptional()
+        );
     }
 
-    public List<User> getAllUsers() {
-        return new ArrayList<>(users.values());
+    public List<User> findAll() {
+        return executeInTransaction((Function<Session, List<User>>) session ->
+                session.createQuery("FROM User", User.class).list()
+        );
     }
 
+    // Удалить по ID
+    public void deleteById(UUID id) {
+        executeInTransaction(session -> {
+            User user = session.get(User.class, id);
+            if (user != null) {
+                session.remove(user);
+            }
+        });
+    }
+
+    // Удалить пользователя (по объекту)
+    public void delete(User user) {
+        executeInTransaction(session -> {
+            session.remove(session.merge(user));  // на случай detached объекта
+        });
+    }
 }

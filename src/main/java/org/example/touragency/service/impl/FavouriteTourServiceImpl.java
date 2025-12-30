@@ -1,15 +1,18 @@
 package org.example.touragency.service.impl;
 
 import lombok.RequiredArgsConstructor;
-import org.example.touragency.model.enity.FavouriteTour;
-import org.example.touragency.model.enity.Tour;
+import org.example.touragency.model.entity.FavouriteTour;
+import org.example.touragency.model.entity.Tour;
+import org.example.touragency.model.entity.User;
 import org.example.touragency.repository.FavTourRepository;
 import org.example.touragency.repository.TourRepository;
+import org.example.touragency.repository.UserRepository;
 import org.example.touragency.service.abstractions.FavouriteTourService;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @RequiredArgsConstructor
@@ -18,18 +21,20 @@ public class FavouriteTourServiceImpl implements FavouriteTourService {
 
     private final FavTourRepository favTourRepository;
     private final TourRepository tourRepository;
+    private  final UserRepository userRepository;
 
 
     @Override
     public FavouriteTour addFavouriteTour(UUID  userId, UUID tourId) {
-        Tour existTour = tourRepository.getTourById(tourId);
-        if (existTour != null) {
+        Optional<Tour> existTour = tourRepository.findById(tourId);
+        Optional<User> existUser = userRepository.findById(userId);
+        if (existTour.isPresent() && existUser.isPresent()) {
             FavouriteTour favouriteTour = FavouriteTour.builder()
-                    .tourId(tourId)
-                    .userId(userId)
+                    .tour(existTour.get())
+                    .user(existUser.get())
                     .build();
-            favTourRepository.addFavouriteTour(favouriteTour);
-            return favouriteTour;
+
+            return favTourRepository.save(favouriteTour);
         }
         return null;
     }
@@ -41,12 +46,11 @@ public class FavouriteTourServiceImpl implements FavouriteTourService {
 
     @Override
     public List<Tour> getUserFavouriteTours(UUID userId) {
-        List<UUID> favToursId =  favTourRepository.getFavouriteTour(userId);
+        List<FavouriteTour> favTours =  favTourRepository.findAllByUserId(userId);
         List<Tour> tours = new ArrayList<>();
 
-        for(UUID favTourId : favToursId) {
-            Tour favTourById = tourRepository.getTourById(favTourId);
-            tours.add(favTourById);
+        for(FavouriteTour favTour : favTours) {
+            tours.add(favTour.getTour());
         }
         return tours;
     }

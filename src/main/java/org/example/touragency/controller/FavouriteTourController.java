@@ -1,8 +1,8 @@
 package org.example.touragency.controller;
 
 import lombok.RequiredArgsConstructor;
-import org.example.touragency.model.enity.FavouriteTour;
-import org.example.touragency.model.enity.Tour;
+import org.example.touragency.model.entity.FavouriteTour;
+import org.example.touragency.model.entity.Tour;
 import org.example.touragency.service.abstractions.FavouriteTourService;
 import org.example.touragency.exception.ApiResponse;
 import org.springframework.http.HttpStatus;
