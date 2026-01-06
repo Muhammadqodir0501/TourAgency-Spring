@@ -17,7 +17,7 @@ public abstract class AbstractHibernateRepository {
         this.sessionFactory = sessionFactory;
     }
 
-    protected <T> T executeInTransaction(Function<Session, T> action) {
+    public <T> T executeInTransaction(Function<Session, T> action) {
         Session session = sessionFactory.openSession();
         Transaction tx = session.beginTransaction();
         try {

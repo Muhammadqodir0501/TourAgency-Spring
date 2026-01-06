@@ -33,7 +33,6 @@ public class UserRepository extends AbstractHibernateRepository {
         });
     }
 
-    // Найти по ID
     public Optional<User> findById(UUID id) {
         return executeInTransaction((Function<Session, Optional<User>>) session ->
                 Optional.ofNullable(session.get(User.class, id))

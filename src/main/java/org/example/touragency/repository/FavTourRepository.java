@@ -25,23 +25,6 @@ public class FavTourRepository extends AbstractHibernateRepository{
         });
     }
 
-    public void deleteFavouriteTourByUserId(UUID userId, UUID tourId) {
-        executeInTransaction(session -> {
-            session.createMutationQuery("DELETE FROM FavouriteTour WHERE user.id = :userId AND tour.id = :tourId")
-                    .setParameter("userId", userId)
-                    .setParameter("tourId", tourId)
-                    .executeUpdate();
-        });
-    }
-
-    public void deleteAllByUserId(UUID userId){
-        executeInTransaction(session -> {
-            session.createMutationQuery("DELETE FROM FavouriteTour WHERE user.id = :userId")
-                    .setParameter("userId", userId)
-                    .executeUpdate();
-        });
-    }
-
     public List<FavouriteTour> findAllByUserId(UUID userId){
         return executeInTransaction((Function<Session, List<FavouriteTour>>) session->
                 session.createQuery("FROM FavouriteTour WHERE user.id = :userId", FavouriteTour.class)
@@ -54,6 +37,23 @@ public class FavTourRepository extends AbstractHibernateRepository{
         executeInTransaction(session -> {
             session.createMutationQuery("DELETE FROM FavouriteTour WHERE tour.id = :tourId")
                     .setParameter("tourId", tourId)
+                    .executeUpdate();
+        });
+    }
+
+    public void deleteByUserIdAndTourId(UUID userId, UUID tourId) {
+        executeInTransaction(session -> {
+            session.createMutationQuery("DELETE FROM FavouriteTour WHERE user.id = :userId AND tour.id = :tourId")
+                    .setParameter("userId", userId)
+                    .setParameter("tourId", tourId)
+                    .executeUpdate();
+        });
+    }
+
+    public void deleteAllIfUserDeleted(UUID userId){
+        executeInTransaction(session -> {
+            session.createMutationQuery("DELETE FROM FavouriteTour WHERE user.id = :userId")
+                    .setParameter("userId", userId)
                     .executeUpdate();
         });
     }

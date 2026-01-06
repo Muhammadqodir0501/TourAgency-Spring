@@ -46,14 +46,14 @@ public class RatingRepository extends AbstractHibernateRepository{
         });
     }
 
-   public Optional<Rating> findRatingByUserAndTourIds(UUID userId, UUID tourId){
-       return executeInTransaction((Function<Session, Optional<Rating>>)  session ->
-           session.createQuery("FROM Rating WHERE user.id = :userId AND tour.id = :tourId", Rating.class)
-                   .setParameter("userId", userId)
-                   .setParameter("tourId", tourId)
-                   .uniqueResultOptional()
-       );
-   }
+    public Optional<Rating> findRatingByUserAndTourIds(UUID userId, UUID tourId){
+        return executeInTransaction((Function<Session, Optional<Rating>>)  session ->
+                session.createQuery("FROM Rating WHERE userId = :userId AND tourId = :tourId", Rating.class)
+                        .setParameter("userId", userId)
+                        .setParameter("tourId", tourId)
+                        .uniqueResultOptional()
+        );
+    }
 
 
     public Optional<RatingCounter> findRatingCounterByTourId(UUID tourId){
@@ -64,6 +64,29 @@ public class RatingRepository extends AbstractHibernateRepository{
         );
     }
 
+    public void deleteAllCountersIfTourDeleted(UUID tourId) {
+        executeInTransaction(session -> {
+            session.createMutationQuery("DELETE FROM RatingCounter WHERE tourId = :tourId")
+                    .setParameter("tourId", tourId)
+                    .executeUpdate();
+        });
+    }
+
+    public void deleteAllRatingsIfTourDeleted(UUID tourId) {
+        executeInTransaction(session -> {
+            session.createMutationQuery("DELETE FROM Rating WHERE tourId = :tourId")
+                    .setParameter("tourId", tourId)
+                    .executeUpdate();
+        });
+    }
+
+    public void deleteAllIfUserDeleted(UUID userId){
+        executeInTransaction(session -> {
+            session.createMutationQuery("DELETE FROM Rating WHERE userId = :userId")
+                    .setParameter("userId", userId)
+                    .executeUpdate();
+        });
+    }
 
 
 }
