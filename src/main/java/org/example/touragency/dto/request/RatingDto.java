@@ -8,7 +8,7 @@ import java.util.UUID;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString
+@Builder
 public class RatingDto {
     private UUID tourId;
     private UUID userId;

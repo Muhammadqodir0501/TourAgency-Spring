@@ -1,26 +1,28 @@
 package org.example.touragency.model.entity;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
 import lombok.*;
 import org.example.touragency.model.base.BaseEntity;
+
+import java.util.UUID;
 
 @Entity
 @Table(name = "ratings")
 @Getter
 @Setter
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
 @Builder
 public class Rating extends BaseEntity {
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "tour_id", nullable = false)
-    Tour tour;
+    @Column(name = "tour_id", nullable = false)
+    private UUID tourId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    User user;
+    @Column(name = "user_id", nullable = false)
+    private UUID userId;
 
     @Column(nullable = false)
-    Float rating;
+    private Float rating;
 }

@@ -43,8 +43,8 @@ public class RatingServiceImpl implements RatingService {
             rating = existRating;
         }else{
             rating = Optional.ofNullable(Rating.builder()
-                    .tour(existTour.get())
-                    .user(existUser.get())
+                    .tourId(existTour.get().getId())
+                    .userId(existUser.get().getId())
                     .rating(ratingDto.getRating())
                     .build());
             ratingRepository.saveRating(rating);
@@ -69,7 +69,7 @@ public class RatingServiceImpl implements RatingService {
             counter = Optional.ofNullable(RatingCounter.builder()
                     .tourId(tourId)
                     .averageRating(ratingDto.getRating())
-                    .ratingAmount(1F)
+                    .ratingAmount(1)
                     .build());
             ratingRepository.saveCounter(counter);
         }
@@ -77,7 +77,7 @@ public class RatingServiceImpl implements RatingService {
 
     @Override
     public void updateExistRating(RatingDto ratingDto, Rating existRating) {
-        Optional<RatingCounter> counter = ratingRepository.findRatingCounterByTourId(existRating.getTour().getId());
+        Optional<RatingCounter> counter = ratingRepository.findRatingCounterByTourId(existRating.getTourId());
 
         if(counter.isPresent()){
             float newAvg = (counter.get().getAverageRating() * counter.get().getRatingAmount()
@@ -89,6 +89,7 @@ public class RatingServiceImpl implements RatingService {
 
         }
     }
+
 
     private void syncTourRatingFromCounter(UUID tourId) {
         Optional<Tour> tour = tourRepository.findById(tourId);
