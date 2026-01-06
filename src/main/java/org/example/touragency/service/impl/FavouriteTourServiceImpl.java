@@ -1,6 +1,7 @@
 package org.example.touragency.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.example.touragency.dto.response.FavTourResponseDto;
 import org.example.touragency.model.entity.FavouriteTour;
 import org.example.touragency.model.entity.Tour;
 import org.example.touragency.model.entity.User;
@@ -10,9 +11,7 @@ import org.example.touragency.repository.UserRepository;
 import org.example.touragency.service.abstractions.FavouriteTourService;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @RequiredArgsConstructor
@@ -25,33 +24,42 @@ public class FavouriteTourServiceImpl implements FavouriteTourService {
 
 
     @Override
-    public FavouriteTour addFavouriteTour(UUID  userId, UUID tourId) {
-        Optional<Tour> existTour = tourRepository.findById(tourId);
-        Optional<User> existUser = userRepository.findById(userId);
-        if (existTour.isPresent() && existUser.isPresent()) {
-            FavouriteTour favouriteTour = FavouriteTour.builder()
-                    .tour(existTour.get())
-                    .user(existUser.get())
-                    .build();
+    public FavTourResponseDto addFavouriteTour(UUID  userId, UUID tourId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
-            return favTourRepository.save(favouriteTour);
-        }
-        return null;
+        Tour tour = tourRepository.findById(tourId)
+                .orElseThrow(() -> new RuntimeException("Tour not found"));
+
+        FavouriteTour favouriteTour = FavouriteTour.builder()
+                .tour(tour)
+                .user(user)
+                .build();
+
+        favTourRepository.save(favouriteTour);
+
+        return new FavTourResponseDto(
+                favouriteTour.getId(),
+                user.getId(),
+                tour.getId()
+        );
     }
 
     @Override
     public void deleteFavouriteTour(UUID userId, UUID tourId) {
-        favTourRepository.deleteFavouriteTourByUserId(userId,tourId);
+        favTourRepository.deleteByUserIdAndTourId(userId,tourId);
     }
 
     @Override
-    public List<Tour> getUserFavouriteTours(UUID userId) {
-        List<FavouriteTour> favTours =  favTourRepository.findAllByUserId(userId);
-        List<Tour> tours = new ArrayList<>();
+    public List<FavTourResponseDto> getUserFavouriteTours(UUID userId) {
+        List<FavouriteTour> favouriteTours = favTourRepository.findAllByUserId(userId);
 
-        for(FavouriteTour favTour : favTours) {
-            tours.add(favTour.getTour());
-        }
-        return tours;
+        return favouriteTours.stream()
+                .map(f -> new FavTourResponseDto(
+                        f.getId(),
+                        f.getUser().getId(),
+                        f.getTour().getId()
+                ))
+                .toList();
     }
 }

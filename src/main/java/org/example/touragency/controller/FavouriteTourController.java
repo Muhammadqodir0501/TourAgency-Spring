@@ -1,6 +1,7 @@
 package org.example.touragency.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.example.touragency.dto.response.FavTourResponseDto;
 import org.example.touragency.model.entity.FavouriteTour;
 import org.example.touragency.model.entity.Tour;
 import org.example.touragency.service.abstractions.FavouriteTourService;
@@ -21,7 +22,7 @@ public class FavouriteTourController {
 
     @PostMapping("/{tourId}")
     public ResponseEntity<ApiResponse<?>> addFavTour(@PathVariable UUID userId, @PathVariable UUID tourId) {
-        FavouriteTour favouriteTour = favouriteTourService.addFavouriteTour(userId,tourId);
+        FavTourResponseDto favouriteTour = favouriteTourService.addFavouriteTour(userId, tourId);
         return ResponseEntity.status(HttpStatus.CREATED).body(new ApiResponse<>(favouriteTour));
     }
 
@@ -32,8 +33,8 @@ public class FavouriteTourController {
     }
 
     @GetMapping()
-    public ResponseEntity<ApiResponse<List<Tour>>> getUserFavouriteTour(@PathVariable UUID userId){
-        List<Tour> tours = favouriteTourService.getUserFavouriteTours(userId);
+    public ResponseEntity<ApiResponse<List<FavTourResponseDto>>> getUserFavouriteTour(@PathVariable UUID userId){
+        List<FavTourResponseDto> tours = favouriteTourService.getUserFavouriteTours(userId);
        return ResponseEntity.ok(new ApiResponse<>(tours));
     }
 }
