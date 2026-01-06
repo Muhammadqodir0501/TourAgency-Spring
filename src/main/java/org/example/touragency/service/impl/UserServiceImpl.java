@@ -5,10 +5,8 @@ import org.example.touragency.dto.request.UserAddDto;
 import org.example.touragency.dto.response.UserUpdateDto;
 import org.example.touragency.model.Role;
 import org.example.touragency.model.entity.User;
-import org.example.touragency.repository.FavTourRepository;
-import org.example.touragency.repository.TourRepository;
-import org.example.touragency.repository.UserRepository;
-import org.example.touragency.service.abstractions.UserService;
+import org.example.touragency.repository.*;
+import org.example.touragency.service.abstractions.*;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -19,8 +17,14 @@ import java.util.UUID;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
-    private final TourRepository tourRepository;
+    private final RatingService ratingService;
+    private final FavouriteTourService favouriteTourService;
+    private final BookingService bookingService;
+    private final TourService tourService;
+    private final RatingRepository ratingRepository;
     private final FavTourRepository favTourRepository;
+    private final BookingRepository bookingRepository;
+    private final TourRepository tourRepository;
 
     @Override
     public User addNewUser(UserAddDto dto) {
@@ -54,9 +58,11 @@ public class UserServiceImpl implements UserService {
 
         userRepository.findById(userId).ifPresent(user -> {
             if (user.getRole() == Role.AGENCY) {
-                tourRepository.deleteAllByAgencyId(userId);
+                tourRepository.deleteAllByAgencyId(user.getId());
             }
-            favTourRepository.deleteAllByUserId(userId);
+            ratingRepository.deleteAllIfUserDeleted(userId);
+            favTourRepository.deleteAllIfUserDeleted(userId);
+            bookingRepository.deleteAllIfUserDeleted(userId);
             userRepository.deleteById(userId);
         });
     }
@@ -87,4 +93,5 @@ public class UserServiceImpl implements UserService {
     public User getUserById(UUID userId) {
         return userRepository.findById(userId).orElse(null);
     }
+
 }
