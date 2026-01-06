@@ -18,19 +18,20 @@ public class RatingRepository extends AbstractHibernateRepository{
         super(sessionFactory);
     }
 
-    public void saveRating(Optional<Rating> rating){
+    public void saveRating(Rating rating) {
         executeInTransaction(session -> {
             session.persist(rating);
             return rating;
         });
     }
 
-    public void saveCounter(Optional<RatingCounter> ratingCounter) {
+    public void saveCounter(RatingCounter ratingCounter) {
         executeInTransaction(session -> {
             session.persist(ratingCounter);
             return ratingCounter;
         });
     }
+
 
     public Rating updateRating(Rating rating) {
         return executeInTransaction(session -> {
@@ -39,12 +40,13 @@ public class RatingRepository extends AbstractHibernateRepository{
         });
     }
 
-    public RatingCounter updateRating(RatingCounter ratingCounter) {
-        return executeInTransaction(session -> {
-            session.merge(ratingCounter);
-            return ratingCounter;
+    public void updateCounter(RatingCounter counter) {
+        executeInTransaction(session -> {
+            session.merge(counter);
+            return counter;
         });
     }
+
 
     public Optional<Rating> findRatingByUserAndTourIds(UUID userId, UUID tourId){
         return executeInTransaction((Function<Session, Optional<Rating>>)  session ->

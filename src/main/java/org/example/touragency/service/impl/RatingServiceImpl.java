@@ -29,51 +29,66 @@ public class RatingServiceImpl implements RatingService {
         UUID tourId = ratingDto.getTourId();
         UUID userId = ratingDto.getUserId();
 
-        if (tourId == null || userId == null) {
-            throw new RuntimeException("Tour or User ID is null");
+        Rating existRating = ratingRepository
+                .findRatingByUserAndTourIds(userId, tourId)
+                .orElse(null);
+
+        Tour tour = tourRepository.findById(tourId)
+                .orElseThrow(() -> new RuntimeException("Tour not found"));
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (existRating != null) {
+            updateExistRating(ratingDto, existRating);
+            syncTourRatingFromCounter(tourId);
+            return existRating;
         }
 
-        Optional<Rating> existRating = ratingRepository.findRatingByUserAndTourIds(userId, tourId);
-        Optional<Rating> rating;
-        Optional<Tour> existTour = tourRepository.findById(tourId);
-        Optional<User> existUser = userRepository.findById(userId);
+        Rating rating = Rating.builder()
+                .tourId(tour.getId())
+                .userId(user.getId())
+                .rating(ratingDto.getRating())
+                .build();
 
-        if(existRating.isPresent()){
-            updateExistRating(ratingDto, existRating.orElse(null));
-            rating = existRating;
-        }else{
-            rating = Optional.ofNullable(Rating.builder()
-                    .tourId(existTour.get().getId())
-                    .userId(existUser.get().getId())
-                    .rating(ratingDto.getRating())
-                    .build());
-            ratingRepository.saveRating(rating);
-            ratingCount(ratingDto);
-        }
+        ratingRepository.saveRating(rating);
+        ratingCount(ratingDto);
         syncTourRatingFromCounter(tourId);
-        return rating.orElse(null);
+
+        return rating;
     }
+
 
     @Override
     public void ratingCount(RatingDto ratingDto) {
         UUID tourId = ratingDto.getTourId();
-        Optional<RatingCounter> counter = ratingRepository.findRatingCounterByTourId(tourId);
 
-        if(counter.isPresent()){
-            float newAvg = (counter.get().getAverageRating() * counter.get().getRatingAmount() + ratingDto.getRating())
-                    / (counter.get().getRatingAmount() + 1);
+        Optional<RatingCounter> optionalCounter =
+                ratingRepository.findRatingCounterByTourId(tourId);
 
-            counter.get().setAverageRating(newAvg);
-            counter.get().setRatingAmount(counter.get().getRatingAmount() + 1);
-        }else{
-            counter = Optional.ofNullable(RatingCounter.builder()
+        if (optionalCounter.isPresent()) {
+            RatingCounter counter = optionalCounter.get();
+
+            float newAvg =
+                    (counter.getAverageRating() * counter.getRatingAmount()
+                            + ratingDto.getRating())
+                            / (counter.getRatingAmount() + 1);
+
+            counter.setAverageRating(newAvg);
+            counter.setRatingAmount(counter.getRatingAmount() + 1);
+
+            ratingRepository.updateCounter(counter);
+        } else {
+            RatingCounter counter = RatingCounter.builder()
                     .tourId(tourId)
                     .averageRating(ratingDto.getRating())
                     .ratingAmount(1)
-                    .build());
+                    .build();
+
             ratingRepository.saveCounter(counter);
         }
     }
+
 
     @Override
     public void updateExistRating(RatingDto ratingDto, Rating existRating) {
@@ -85,23 +100,29 @@ public class RatingServiceImpl implements RatingService {
                     / counter.get().getRatingAmount();
 
             counter.get().setAverageRating(newAvg);
+            ratingRepository.updateCounter(counter.get());
+
             existRating.setRating(ratingDto.getRating());
+            ratingRepository.updateRating(existRating);
 
         }
     }
 
 
     private void syncTourRatingFromCounter(UUID tourId) {
-        Optional<Tour> tour = tourRepository.findById(tourId);
-        Optional<RatingCounter> counter = ratingRepository.findRatingCounterByTourId(tourId);
+        Tour tour = tourRepository.findById(tourId).orElse(null);
+        RatingCounter counter = ratingRepository.findRatingCounterByTourId(tourId).orElse(null);
 
-        if (tour.isEmpty()) return;
+        if (tour == null) return;
 
-        if (counter.isPresent()) {
-            tour.get().setRating(counter.get().getAverageRating());
+        if (counter != null) {
+            tour.setRating(counter.getAverageRating());
         } else {
-            tour.get().setRating(null);
+            tour.setRating(null);
         }
+
+        tourRepository.update(tour);
     }
+
 
 }
