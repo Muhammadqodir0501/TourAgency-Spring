@@ -6,8 +6,8 @@ import org.example.touragency.model.base.BaseEntity;
 
 import java.util.UUID;
 
-//@Entity
-//@Table(name = "bookings")
+@Entity
+@Table(name = "bookings")
 @Getter
 @Setter
 @NoArgsConstructor

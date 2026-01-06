@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.example.touragency.dto.request.UserAddDto;
 import org.example.touragency.dto.response.UserUpdateDto;
 import org.example.touragency.model.Role;
+import org.example.touragency.model.entity.Tour;
 import org.example.touragency.model.entity.User;
 import org.example.touragency.repository.*;
 import org.example.touragency.service.abstractions.*;
@@ -17,10 +18,6 @@ import java.util.UUID;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
-    private final RatingService ratingService;
-    private final FavouriteTourService favouriteTourService;
-    private final BookingService bookingService;
-    private final TourService tourService;
     private final RatingRepository ratingRepository;
     private final FavTourRepository favTourRepository;
     private final BookingRepository bookingRepository;
@@ -57,15 +54,28 @@ public class UserServiceImpl implements UserService {
         }
 
         userRepository.findById(userId).ifPresent(user -> {
+
             if (user.getRole() == Role.AGENCY) {
+
+                List<Tour> tours = tourRepository.findByAgencyId(user.getId());
+
+                for (Tour tour : tours) {
+                    bookingRepository.deleteAllIfTourDeleted(tour.getId());
+                    favTourRepository.deleteAllIfTourDeleted(tour.getId());
+                    ratingRepository.deleteAllRatingsIfTourDeleted(tour.getId());
+                    ratingRepository.deleteAllCountersIfTourDeleted(tour.getId());
+                }
+
                 tourRepository.deleteAllByAgencyId(user.getId());
             }
             ratingRepository.deleteAllIfUserDeleted(userId);
             favTourRepository.deleteAllIfUserDeleted(userId);
             bookingRepository.deleteAllIfUserDeleted(userId);
+
             userRepository.deleteById(userId);
         });
     }
+
 
     @Override
     public User updateUser(UUID userId, UserUpdateDto dto) {
