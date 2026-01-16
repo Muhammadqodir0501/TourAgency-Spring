@@ -12,5 +12,5 @@ import java.util.UUID;
 public class RatingDto {
     private UUID tourId;
     private UUID userId;
-    private Float rating;
+    private Float rate;
 }

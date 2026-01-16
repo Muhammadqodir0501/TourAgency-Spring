@@ -2,8 +2,6 @@ package org.example.touragency.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.example.touragency.dto.response.FavTourResponseDto;
-import org.example.touragency.model.entity.FavouriteTour;
-import org.example.touragency.model.entity.Tour;
 import org.example.touragency.service.abstractions.FavouriteTourService;
 import org.example.touragency.exception.ApiResponse;
 import org.springframework.http.HttpStatus;
@@ -21,7 +19,7 @@ public class FavouriteTourController {
     private final FavouriteTourService favouriteTourService;
 
     @PostMapping("/{tourId}")
-    public ResponseEntity<ApiResponse<?>> addFavTour(@PathVariable UUID userId, @PathVariable UUID tourId) {
+    public ResponseEntity<ApiResponse<FavTourResponseDto>> addFavTour(@PathVariable UUID userId, @PathVariable UUID tourId) {
         FavTourResponseDto favouriteTour = favouriteTourService.addFavouriteTour(userId, tourId);
         return ResponseEntity.status(HttpStatus.CREATED).body(new ApiResponse<>(favouriteTour));
     }

@@ -19,27 +19,27 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class TourController {
 
-    final private TourService tourService;
+    private final TourService tourService;
 
     @PostMapping()
-    public ResponseEntity<ApiResponse<?>> addNewTour(@PathVariable UUID agencyId,
+    public ResponseEntity<ApiResponse<TourResponseDto>> addNewTour(@PathVariable UUID agencyId,
                                                      @RequestBody TourAddDto tourAddDto) {
-        Tour createdTour = tourService.addNewTour(agencyId, tourAddDto);
+        TourResponseDto createdTour = tourService.addNewTour(agencyId, tourAddDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(new ApiResponse<>(createdTour));
 
     }
 
     @DeleteMapping("/{tourId}")
-    public ResponseEntity<ApiResponse<?>> deleteTour(@PathVariable UUID agencyId, @PathVariable UUID tourId) {
+    public ResponseEntity<ApiResponse<Void>> deleteTour(@PathVariable UUID agencyId, @PathVariable UUID tourId) {
         tourService.deleteTour(agencyId,tourId);
         return ResponseEntity.noContent().build();
     }
 
     @PutMapping("/{tourId}")
-    public ResponseEntity<ApiResponse<?>> updateTour(@PathVariable UUID agencyId,
+    public ResponseEntity<ApiResponse<TourResponseDto>> updateTour(@PathVariable UUID agencyId,
                                         @PathVariable UUID tourId,
                                         @RequestBody TourUpdateDto tourUpdateDto) {
-        Tour updatedTour = tourService.updateTour(agencyId,tourId,tourUpdateDto);
+        TourResponseDto updatedTour = tourService.updateTour(agencyId,tourId,tourUpdateDto);
         return ResponseEntity.ok(new ApiResponse<>(updatedTour));
     }
 

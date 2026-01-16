@@ -35,7 +35,7 @@ public class TourServiceImpl implements TourService {
 
 
     @Override
-    public Tour addNewTour(UUID agencyId, TourAddDto tourAddDto) {
+    public TourResponseDto addNewTour(UUID agencyId, TourAddDto tourAddDto) {
 
         Optional<User> agency = userRepository.findById(agencyId);
 
@@ -66,7 +66,8 @@ public class TourServiceImpl implements TourService {
                 .views(0L)
                 .build();
 
-        return tourRepository.save(newTour);
+                 tourRepository.save(newTour);
+                 return toResponseDto(newTour);
 
     }
 
@@ -93,7 +94,7 @@ public class TourServiceImpl implements TourService {
 
 
     @Override
-    public Tour updateTour(UUID agencyId, UUID tourId, TourUpdateDto tourUpdateDto) {
+    public TourResponseDto updateTour(UUID agencyId, UUID tourId, TourUpdateDto tourUpdateDto) {
 
         Optional<Tour> existingTour = tourRepository.findById(tourId);
 
@@ -117,7 +118,7 @@ public class TourServiceImpl implements TourService {
         existingTour.get().setNights(nights);
         existingTour.get().setHotel(tourUpdateDto.getHotel());
         tourRepository.update(existingTour.get());
-        return existingTour.orElse(null);
+        return toResponseDto(existingTour.get());
     }
 
     @Override
@@ -177,11 +178,11 @@ public class TourServiceImpl implements TourService {
             throw new NotFoundException("Tour not found");
         }
 
-        tour.get().setSeatsAvailable(tour.get().getSeatsAvailable() + 1);
         if(tour.get().getSeatsAvailable() == 0){
             tour.get().setAvailable(true);
-            tourRepository.update(tour.get());
         }
+        tour.get().setSeatsAvailable(tour.get().getSeatsAvailable() + 1);
+        tourRepository.update(tour.get());
     }
 
     @Override
@@ -202,8 +203,8 @@ public class TourServiceImpl implements TourService {
         tour.get().setDiscountPercent(discountPercent);
         tour.get().setPriceWithDiscount(
                 tour.get().getPrice().multiply(
-                        BigDecimal.valueOf(100 - discountPercent)
-                ).divide(BigDecimal.valueOf(100))
+                        BigDecimal.valueOf(100f - discountPercent)
+                ).divide(BigDecimal.valueOf(100f))
         );
         tourRepository.update(tour.get());
         return toResponseDto(tour.orElse(null));
@@ -212,6 +213,10 @@ public class TourServiceImpl implements TourService {
 
     private TourResponseDto toResponseDto(Tour tour) {
         Optional<User> agency = userRepository.findById(tour.getAgency().getId());
+
+        if(agency.isEmpty()) {
+            throw new NotFoundException("Agency not found");
+        }
         return TourResponseDto.builder()
                 .id(tour.getId())
                 .agencyName(agency.get().getFullName())

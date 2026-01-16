@@ -1,9 +1,6 @@
 package org.example.touragency.service.abstractions;
 
 import org.example.touragency.dto.response.FavTourResponseDto;
-import org.example.touragency.model.entity.FavouriteTour;
-import org.example.touragency.model.entity.Tour;
-
 import java.util.List;
 import java.util.UUID;
 

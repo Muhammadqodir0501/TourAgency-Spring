@@ -2,6 +2,7 @@ package org.example.touragency.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import org.example.touragency.dto.request.RatingDto;
+import org.example.touragency.dto.response.RatingResponseDto;
 import org.example.touragency.exception.NotFoundException;
 import org.example.touragency.model.entity.Rating;
 import org.example.touragency.model.entity.RatingCounter;
@@ -25,7 +26,7 @@ public class RatingServiceImpl implements RatingService {
     private final UserRepository userRepository;
 
     @Override
-    public Rating addRating(RatingDto ratingDto) {
+    public RatingResponseDto addRating(RatingDto ratingDto) {
 
         UUID tourId = ratingDto.getTourId();
         UUID userId = ratingDto.getUserId();
@@ -43,20 +44,20 @@ public class RatingServiceImpl implements RatingService {
         if (existRating != null) {
             updateExistRating(ratingDto, existRating);
             syncTourRatingFromCounter(tourId);
-            return existRating;
+            return toResponseDto(existRating);
         }
 
         Rating rating = Rating.builder()
                 .tourId(tour.getId())
                 .userId(user.getId())
-                .rating(ratingDto.getRating())
+                .rate(ratingDto.getRate())
                 .build();
 
         ratingRepository.saveRating(rating);
         ratingCount(ratingDto);
         syncTourRatingFromCounter(tourId);
 
-        return rating;
+        return toResponseDto(rating);
     }
 
 
@@ -72,7 +73,7 @@ public class RatingServiceImpl implements RatingService {
 
             float newAvg =
                     (counter.getAverageRating() * counter.getRatingAmount()
-                            + ratingDto.getRating())
+                            + ratingDto.getRate())
                             / (counter.getRatingAmount() + 1);
 
             counter.setAverageRating(newAvg);
@@ -82,7 +83,7 @@ public class RatingServiceImpl implements RatingService {
         } else {
             RatingCounter counter = RatingCounter.builder()
                     .tourId(tourId)
-                    .averageRating(ratingDto.getRating())
+                    .averageRating(ratingDto.getRate())
                     .ratingAmount(1)
                     .build();
 
@@ -97,13 +98,13 @@ public class RatingServiceImpl implements RatingService {
 
         if(counter.isPresent()){
             float newAvg = (counter.get().getAverageRating() * counter.get().getRatingAmount()
-                    - existRating.getRating() + ratingDto.getRating())
+                    - existRating.getRate() + ratingDto.getRate())
                     / counter.get().getRatingAmount();
 
             counter.get().setAverageRating(newAvg);
             ratingRepository.updateCounter(counter.get());
 
-            existRating.setRating(ratingDto.getRating());
+            existRating.setRate(ratingDto.getRate());
             ratingRepository.updateRating(existRating);
 
         }
@@ -123,6 +124,15 @@ public class RatingServiceImpl implements RatingService {
         }
 
         tourRepository.update(tour);
+    }
+
+    private RatingResponseDto toResponseDto(Rating rating) {
+        return RatingResponseDto.builder()
+                .ratingId(rating.getId())
+                .tourId(rating.getTourId())
+                .userId(rating.getUserId())
+                .userRating(rating.getRate())
+                .build();
     }
 
 

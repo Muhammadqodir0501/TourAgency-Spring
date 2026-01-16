@@ -3,7 +3,6 @@ package org.example.touragency.controller;
 import lombok.RequiredArgsConstructor;
 import org.example.touragency.dto.response.BookingResponseDto;
 import org.example.touragency.exception.ApiResponse;
-import org.example.touragency.model.entity.Booking;
 import org.example.touragency.service.abstractions.BookingService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

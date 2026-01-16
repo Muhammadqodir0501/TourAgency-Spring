@@ -24,5 +24,5 @@ public class Rating extends BaseEntity {
     private UUID userId;
 
     @Column(nullable = false)
-    private Float rating;
+    private float rate;
 }

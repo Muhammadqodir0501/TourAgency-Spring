@@ -16,5 +16,4 @@ public class RatingResponseDto {
     private Float userRating;
     private Float averageRating;
     private Integer ratingCount;
-    private String message;
 }

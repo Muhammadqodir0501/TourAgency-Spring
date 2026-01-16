@@ -4,8 +4,6 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.example.touragency.model.base.BaseEntity;
 
-import java.util.UUID;
-
 @Entity
 @Table(name = "bookings")
 @Getter

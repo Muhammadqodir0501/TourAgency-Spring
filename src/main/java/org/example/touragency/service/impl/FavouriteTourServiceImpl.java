@@ -68,6 +68,10 @@ public class FavouriteTourServiceImpl implements FavouriteTourService {
 
     @Override
     public List<FavTourResponseDto> getUserFavouriteTours(UUID userId) {
+
+        userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("User not found"));
+
         List<FavouriteTour> favouriteTours = favTourRepository.findAllByUserId(userId);
 
         return favouriteTours.stream()

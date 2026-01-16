@@ -2,6 +2,7 @@ package org.example.touragency.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import org.example.touragency.dto.request.UserAddDto;
+import org.example.touragency.dto.response.UserResponseDto;
 import org.example.touragency.dto.response.UserUpdateDto;
 import org.example.touragency.exception.BadRequestException;
 import org.example.touragency.exception.ConflictException;
@@ -14,6 +15,7 @@ import org.example.touragency.service.abstractions.*;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @RequiredArgsConstructor
@@ -27,7 +29,7 @@ public class UserServiceImpl implements UserService {
     private final TourRepository tourRepository;
 
     @Override
-    public User addNewUser(UserAddDto dto) {
+    public UserResponseDto addNewUser(UserAddDto dto) {
         if (dto == null) {
             throw new BadRequestException("UserAddDto cannot be null");
         }
@@ -47,7 +49,8 @@ public class UserServiceImpl implements UserService {
                 .role(dto.getRole())
                 .build();
 
-        return userRepository.save(newUser);
+        userRepository.save(newUser);
+        return toResponseDto(newUser);
     }
 
     @Override
@@ -81,7 +84,7 @@ public class UserServiceImpl implements UserService {
 
 
     @Override
-    public User updateUser(UUID userId, UserUpdateDto dto) {
+    public UserResponseDto updateUser(UUID userId, UserUpdateDto dto) {
 
         if (userId == null || dto == null) {
             throw new BadRequestException("Parameters cannot be null");
@@ -107,19 +110,38 @@ public class UserServiceImpl implements UserService {
         user.setPassword(dto.getPassword());
         user.setPhoneNumber(dto.getPhoneNumber());
 
-        return userRepository.update(user);
+        userRepository.update(user);
+        return toResponseDto(user);
     }
 
 
     @Override
-    public List<User> getAllUsers() {
-        return userRepository.findAll();
+    public List<UserResponseDto> getAllUsers() {
+        return userRepository.findAll().stream()
+                .map(this::toResponseDto)
+                .toList();
     }
 
     @Override
     public User getUserById(UUID userId) {
         return userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
+    }
+
+    private UserResponseDto toResponseDto(User user) {
+
+        Optional<User> optionalUser = userRepository.findById(user.getId());
+        if(optionalUser.isEmpty()){
+            throw new NotFoundException("User not found");
+        }
+
+        return UserResponseDto.builder()
+                .userId(user.getId())
+                .fullName(user.getFullName())
+                .email(user.getEmail())
+                .phoneNumber(user.getPhoneNumber())
+                .role(user.getRole())
+                .build();
     }
 
 }
