@@ -17,7 +17,7 @@ public abstract class AbstractHibernateRepository {
         this.sessionFactory = sessionFactory;
     }
 
-    public <T> T executeInTransaction(Function<Session, T> action) {
+    protected <T> T executeInTransaction(Function<Session, T> action) {
         Session session = sessionFactory.openSession();
         Transaction tx = session.beginTransaction();
         try {
@@ -32,10 +32,17 @@ public abstract class AbstractHibernateRepository {
         }
     }
 
-    protected void executeInTransaction(Consumer<Session> action) {
-        executeInTransaction(session -> {
+    protected void executeInTransactionVoid(Consumer<Session> action) {
+        Session session = sessionFactory.openSession();
+        Transaction tx = session.beginTransaction();
+        try {
             action.accept(session);
-            return null;
-        });
+            tx.commit();
+        } catch (Exception e) {
+            tx.rollback();
+            throw e;
+        } finally {
+            session.close();
+        }
     }
 }

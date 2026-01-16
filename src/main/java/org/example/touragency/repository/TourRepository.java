@@ -1,13 +1,11 @@
 package org.example.touragency.repository;
 
 import org.example.touragency.model.entity.Tour;
-import org.example.touragency.model.entity.User;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.springframework.stereotype.Repository;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
 @Repository
@@ -25,14 +23,13 @@ public class TourRepository extends AbstractHibernateRepository {
     }
 
     public Tour update(Tour tour) {
-        return executeInTransaction(session -> {
-            session.merge(tour);
-            return tour;
-        });
+        return executeInTransaction(session ->
+                session.merge(tour)
+        );
     }
 
     public void deleteById(UUID id) {
-        executeInTransaction(session -> {
+        executeInTransactionVoid(session -> {
             Tour tour = session.get(Tour.class, id);
             if (tour != null) {
                 session.remove(tour);
@@ -47,7 +44,7 @@ public class TourRepository extends AbstractHibernateRepository {
     }
 
     public List<Tour> findByAgencyId(UUID agencyId) {
-        return executeInTransaction((Function<Session, List<Tour>>) session ->
+        return executeInTransaction(session ->
                 session.createQuery("FROM Tour WHERE agency.id = :agencyId ",Tour.class)
                         .setParameter("agencyId",agencyId)
                         .list()
@@ -55,17 +52,17 @@ public class TourRepository extends AbstractHibernateRepository {
     }
 
     public List<Tour> findAll() {
-        return executeInTransaction((Function<Session, List<Tour>>) session ->
+        return executeInTransaction(session ->
                 session.createQuery("FROM Tour", Tour.class).list()
         );
     }
 
     public void deleteAllByAgencyId(UUID agencyId) {
-        executeInTransaction(session -> {
+        executeInTransactionVoid(session ->
             session.createMutationQuery("DELETE FROM Tour WHERE agency.id = :agencyId ")
                     .setParameter("agencyId", agencyId)
-                    .executeUpdate();
-        });
+                    .executeUpdate()
+        );
     }
 
 
