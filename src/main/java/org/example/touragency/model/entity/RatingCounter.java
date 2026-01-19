@@ -18,10 +18,10 @@ import java.util.UUID;
 public class RatingCounter extends BaseEntity {
 
     @Column(name = "average_rating")
-    private Float averageRating = 0f;
+    private float averageRating = 0f;
 
     @Column(name = "rating_amount")
-    private Integer ratingAmount = 0;
+    private int ratingAmount = 0;
 
     @Column(name = "tour_id", unique = true, nullable = false)
     private UUID tourId;

@@ -23,7 +23,7 @@ public class Tour extends BaseEntity {
     @Column(nullable = false)
     private String title;
     private String description;
-    private Integer nights;
+    private int nights;
 
     @Column(name = "start_date")
     private LocalDate startDate;
@@ -42,18 +42,18 @@ public class Tour extends BaseEntity {
     private String city;
 
     @Column(name = "seats_total")
-    private Integer seatsTotal;
+    private int seatsTotal;
 
     @Column(name = "seats_available")
-    private Integer seatsAvailable;
+    private int seatsAvailable;
     private Long views = 0L;
-    private Float rating = 0f;
+    private float rating = 0f;
 
     @Column(name = "is_available")
     private boolean isAvailable = true;
 
     @Column(name = "discount_percent")
-    private Integer discountPercent = 0;
+    private float discountPercent = 0;
 
 
 }

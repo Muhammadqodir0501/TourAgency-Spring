@@ -18,5 +18,5 @@ public class TourAddDto {
     private BigDecimal price;
     private String hotel;
     private String city;
-    private Integer seatsTotal;
+    private int seatsTotal;
 }

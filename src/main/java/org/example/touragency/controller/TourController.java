@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import org.example.touragency.dto.request.TourAddDto;
 import org.example.touragency.dto.response.TourResponseDto;
 import org.example.touragency.dto.response.TourUpdateDto;
-import org.example.touragency.model.entity.Tour;
 import org.example.touragency.service.abstractions.TourService;
 import org.example.touragency.exception.ApiResponse;
 import org.springframework.http.HttpStatus;

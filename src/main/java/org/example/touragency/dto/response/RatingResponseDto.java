@@ -13,7 +13,7 @@ public class RatingResponseDto {
     private UUID ratingId;
     private UUID tourId;
     private UUID userId;
-    private Float userRating;
-    private Float averageRating;
-    private Integer ratingCount;
+    private float userRating;
+    private float averageRating;
+    private double ratingCount;
 }

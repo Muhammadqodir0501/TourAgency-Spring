@@ -18,8 +18,8 @@ public class TourUpdateDto {
     private BigDecimal price;
     private String hotel;
     private String city;
-    private Integer seatsTotal;
-    private Integer seatsAvailable;
+    private int seatsTotal;
+    private int seatsAvailable;
     private boolean isAvailable = true;
-    private Integer discountPercent;
+    private float discountPercent;
 }

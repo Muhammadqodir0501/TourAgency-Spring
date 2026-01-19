@@ -120,7 +120,7 @@ public class RatingServiceImpl implements RatingService {
         if (counter != null) {
             tour.setRating(counter.getAverageRating());
         } else {
-            tour.setRating(null);
+            tour.setRating(0);
         }
 
         tourRepository.update(tour);
