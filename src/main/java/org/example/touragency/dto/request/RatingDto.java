@@ -1,7 +1,6 @@
 package org.example.touragency.dto.request;
 
 import lombok.*;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.UUID;
 
