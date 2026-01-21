@@ -1,20 +1,18 @@
 package org.example.touragency.model.base;
 
+import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDateTime;
 import java.util.UUID;
 
+@MappedSuperclass
 @Getter
 @Setter
 public abstract class BaseEntity {
 
-    private final UUID id;
-    private final LocalDateTime createdAt;
-
-
-    public BaseEntity() {
-        this.id = UUID.randomUUID();
-        this.createdAt = LocalDateTime.now();
-    }
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(name = "id", updatable = false, nullable = false)
+    private UUID id;
 }
+

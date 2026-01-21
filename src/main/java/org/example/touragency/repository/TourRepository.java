@@ -1,42 +1,68 @@
 package org.example.touragency.repository;
 
-import org.example.touragency.dto.response.TourResponseDto;
-import org.example.touragency.model.enity.Tour;
+import org.example.touragency.model.entity.Tour;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
 import org.springframework.stereotype.Repository;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 
 @Repository
-public class TourRepository {
+public class TourRepository extends AbstractHibernateRepository {
 
-    private final Map<UUID, Tour> tours = new ConcurrentHashMap<>();
-
-    public Tour addTour(Tour tour) {
-        tours.put(tour.getId(), tour);
-        return tour;
+    public TourRepository(SessionFactory sessionFactory) {
+        super(sessionFactory);
     }
 
-    public void deleteTour(UUID id) {
-        tours.remove(id);
+    public Tour save(Tour tour) {
+        return executeInTransaction(session -> {
+            session.persist(tour);
+            return tour;
+        });
     }
 
-    public Tour getTourById(UUID id) {
-        return (tours.get(id));
+    public Tour update(Tour tour) {
+        return executeInTransaction(session ->
+                session.merge(tour)
+        );
     }
 
-    public List<Tour> getToursByAgencyId(UUID agencyId) {
-        return tours.values().stream()
-                .filter(tour -> tour.getAgencyId().equals(agencyId))
-                .toList();
+    public void deleteById(UUID id) {
+        executeInTransactionVoid(session -> {
+            Tour tour = session.get(Tour.class, id);
+            if (tour != null) {
+                session.remove(tour);
+            }
+        });
     }
 
-    public List<Tour> getAllTours() {
-        return new ArrayList<>(tours.values());
+    public Optional<Tour> findById(UUID id) {
+        return executeInTransaction((Function<Session, Optional<Tour>>) session ->
+                Optional.ofNullable(session.get(Tour.class, id))
+        );
     }
 
-    public void deleteAgencyAllTours(UUID id) {
-        tours.values().removeIf(tour -> tour.getAgencyId().equals(id));
+    public List<Tour> findByAgencyId(UUID agencyId) {
+        return executeInTransaction(session ->
+                session.createQuery("FROM Tour WHERE agency.id = :agencyId ",Tour.class)
+                        .setParameter("agencyId",agencyId)
+                        .list()
+        );
+    }
+
+    public List<Tour> findAll() {
+        return executeInTransaction(session ->
+                session.createQuery("FROM Tour", Tour.class).list()
+        );
+    }
+
+    public void deleteAllByAgencyId(UUID agencyId) {
+        executeInTransactionVoid(session ->
+            session.createMutationQuery("DELETE FROM Tour WHERE agency.id = :agencyId ")
+                    .setParameter("agencyId", agencyId)
+                    .executeUpdate()
+        );
     }
 
 

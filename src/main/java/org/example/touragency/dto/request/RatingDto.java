@@ -1,6 +1,7 @@
 package org.example.touragency.dto.request;
 
 import lombok.*;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.UUID;
 
@@ -8,9 +9,9 @@ import java.util.UUID;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString
+@Builder
 public class RatingDto {
     private UUID tourId;
     private UUID userId;
-    private Float rating;
+    private float rate;
 }

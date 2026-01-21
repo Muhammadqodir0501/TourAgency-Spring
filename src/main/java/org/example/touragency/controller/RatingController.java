@@ -2,7 +2,7 @@ package org.example.touragency.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.example.touragency.dto.request.RatingDto;
-import org.example.touragency.model.enity.Rating;
+import org.example.touragency.dto.response.RatingResponseDto;
 import org.example.touragency.service.abstractions.RatingService;
 import org.example.touragency.exception.ApiResponse;
 import org.springframework.http.HttpStatus;
@@ -20,8 +20,8 @@ public class RatingController {
     private final RatingService ratingService;
 
     @PostMapping
-    public ResponseEntity<ApiResponse<?>> giveRateToTour(@RequestBody RatingDto ratingDto) {
-        Rating rating =  ratingService.addRating(ratingDto);
+    public ResponseEntity<ApiResponse<RatingResponseDto>> giveRateToTour(@RequestBody RatingDto ratingDto) {
+        RatingResponseDto rating =  ratingService.addRating(ratingDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(new ApiResponse<>(rating));
     }
 }

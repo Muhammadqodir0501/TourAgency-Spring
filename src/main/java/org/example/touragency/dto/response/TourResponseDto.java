@@ -18,16 +18,16 @@ public class TourResponseDto {
     private UUID agencyId;
     private String title;
     private String description;
-    private Integer nights;
+    private int nights;
     private LocalDate startDate;
     private LocalDate returnDate;
     private BigDecimal price;
     private BigDecimal priceWithDiscount;
     private String hotel;
     private String city;
-    private Integer seatsTotal;
-    private Integer seatsAvailable;
+    private int seatsTotal;
+    private int seatsAvailable;
     private Long views;
-    private Float rating;
-    private Integer discountPercent;
+    private float rating;
+    private float discountPercent;
 }

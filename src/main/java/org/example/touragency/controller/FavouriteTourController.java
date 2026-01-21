@@ -1,8 +1,7 @@
 package org.example.touragency.controller;
 
 import lombok.RequiredArgsConstructor;
-import org.example.touragency.model.enity.FavouriteTour;
-import org.example.touragency.model.enity.Tour;
+import org.example.touragency.dto.response.FavTourResponseDto;
 import org.example.touragency.service.abstractions.FavouriteTourService;
 import org.example.touragency.exception.ApiResponse;
 import org.springframework.http.HttpStatus;
@@ -20,8 +19,8 @@ public class FavouriteTourController {
     private final FavouriteTourService favouriteTourService;
 
     @PostMapping("/{tourId}")
-    public ResponseEntity<ApiResponse<?>> addFavTour(@PathVariable UUID userId, @PathVariable UUID tourId) {
-        FavouriteTour favouriteTour = favouriteTourService.addFavouriteTour(userId,tourId);
+    public ResponseEntity<ApiResponse<FavTourResponseDto>> addFavTour(@PathVariable UUID userId, @PathVariable UUID tourId) {
+        FavTourResponseDto favouriteTour = favouriteTourService.addFavouriteTour(userId, tourId);
         return ResponseEntity.status(HttpStatus.CREATED).body(new ApiResponse<>(favouriteTour));
     }
 
@@ -32,8 +31,8 @@ public class FavouriteTourController {
     }
 
     @GetMapping()
-    public ResponseEntity<ApiResponse<List<Tour>>> getUserFavouriteTour(@PathVariable UUID userId){
-        List<Tour> tours = favouriteTourService.getUserFavouriteTours(userId);
+    public ResponseEntity<ApiResponse<List<FavTourResponseDto>>> getUserFavouriteTour(@PathVariable UUID userId){
+        List<FavTourResponseDto> tours = favouriteTourService.getUserFavouriteTours(userId);
        return ResponseEntity.ok(new ApiResponse<>(tours));
     }
 }

@@ -1,43 +1,69 @@
 package org.example.touragency.repository;
 
 
-import org.example.touragency.model.enity.FavouriteTour;
+import org.example.touragency.model.entity.FavouriteTour;
+import org.hibernate.SessionFactory;
 import org.springframework.stereotype.Repository;
+import static org.example.touragency.constant.QueryConstants.*;
 
 import java.util.List;
-import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Repository
-public class FavTourRepository {
+public class FavTourRepository extends AbstractHibernateRepository{
 
-    private final Map<UUID, FavouriteTour> favorites = new ConcurrentHashMap<>();
-
-
-    public FavouriteTour addFavouriteTour(FavouriteTour favouriteTour) {
-        favorites.put(favouriteTour.getId(), favouriteTour);
-        return favouriteTour;
+    protected FavTourRepository(SessionFactory sessionFactory) {
+        super(sessionFactory);
     }
 
-    public void deleteFavouriteTourByUserId(UUID userId, UUID tourId) {
-        favorites.values().removeIf(fav -> fav.getUserId().equals(userId)
-                && fav.getTourId().equals(tourId));
+    public FavouriteTour save(FavouriteTour favouriteTour) {
+        return executeInTransaction(session ->  {
+            session.persist(favouriteTour);
+            return favouriteTour;
+        });
     }
 
-    public void deleteAllFavouriteToursByUserId(UUID userId) {
-        favorites.values().removeIf(fav -> fav.getUserId().equals(userId));
+    public List<FavouriteTour> findAllByUserId(UUID userId){
+        return executeInTransaction(session->
+                session.createQuery("FROM FavouriteTour WHERE user.id = :userId", FavouriteTour.class)
+                .setParameter(USER_ID, userId)
+                        .list()
+                );
     }
 
-    public List<UUID> getFavouriteTour(UUID userId) {
-        return favorites.values().stream()
-                .filter(fav -> fav.getUserId().equals(userId))
-                .map(FavouriteTour::getTourId)
-                .toList();
+    public Optional<FavouriteTour> findByUserAndTourId(UUID userId, UUID tourId){
+        return executeInTransaction( session ->
+                session.createQuery("FROM FavouriteTour WHERE user.id = :userId and tour.id = :tourId", FavouriteTour.class)
+                        .setParameter(USER_ID,userId)
+                        .setParameter(TOUR_ID, tourId)
+                        .uniqueResultOptional());
+
     }
 
-    public void deleteAllFavToursIfTourDeleted(UUID tourId) {
-        favorites.values().removeIf(fav -> fav.getTourId().equals(tourId));
+    public void deleteAllIfTourDeleted(UUID tourId) {
+        executeInTransaction(session ->
+            session.createMutationQuery("DELETE FROM FavouriteTour WHERE tour.id = :tourId")
+                    .setParameter(TOUR_ID, tourId)
+                    .executeUpdate()
+        );
+    }
+
+    public void deleteByUserIdAndTourId(UUID userId, UUID tourId) {
+        executeInTransaction(session ->
+            session.createMutationQuery("DELETE FROM FavouriteTour WHERE user.id = :userId AND tour.id = :tourId")
+                    .setParameter(USER_ID, userId)
+                    .setParameter(TOUR_ID, tourId)
+                    .executeUpdate()
+        );
+    }
+
+    public void deleteAllIfUserDeleted(UUID userId){
+        executeInTransaction(session ->
+            session.createMutationQuery("DELETE FROM FavouriteTour WHERE user.id = :userId")
+                    .setParameter(USER_ID, userId)
+                    .executeUpdate()
+        );
     }
 
 }

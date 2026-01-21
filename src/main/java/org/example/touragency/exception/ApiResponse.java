@@ -9,6 +9,7 @@ public class ApiResponse<T> {
     private boolean success;
     private T data;
     private String error;
+    private Integer status;
 
     public ApiResponse() {}
 
@@ -17,9 +18,10 @@ public class ApiResponse<T> {
         this.data = data;
     }
 
-    public ApiResponse(String error) {
+    public ApiResponse(String error, Integer status) {
         this.success = false;
         this.error = error;
+        this.status = status;
     }
 }
 

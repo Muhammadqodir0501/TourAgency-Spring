@@ -10,7 +10,6 @@ import java.time.LocalDate;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString
 public class TourAddDto {
     private String title;
     private String description;
@@ -19,5 +18,5 @@ public class TourAddDto {
     private BigDecimal price;
     private String hotel;
     private String city;
-    private Integer seatsTotal;
+    private int seatsTotal;
 }

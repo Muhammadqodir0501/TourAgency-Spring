@@ -9,7 +9,6 @@ import org.example.touragency.model.Role;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString
 public class UserAddDto {
 
     @JsonProperty("fullName")

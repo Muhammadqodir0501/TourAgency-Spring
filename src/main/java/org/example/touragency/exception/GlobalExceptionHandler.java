@@ -8,10 +8,30 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<ApiResponse<?>> handleException(Exception e) {
+    @ExceptionHandler(ApiException.class)
+    public ResponseEntity<ApiResponse<?>> handleApiException(ApiException ex) {
 
-        ApiResponse<?> response = new ApiResponse<>(e.getMessage());
-        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        ApiResponse<?> response = new ApiResponse<>(
+                ex.getMessage(),
+                ex.getStatus().value()
+        );
+
+        return ResponseEntity
+                .status(ex.getStatus())
+                .body(response);
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ApiResponse<?>> handleOther(Exception ex) {
+
+        ApiResponse<?> response = new ApiResponse<>(
+                "Internal server error",
+                500
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(response);
     }
 }
+

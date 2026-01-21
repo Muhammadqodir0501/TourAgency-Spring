@@ -1,54 +1,90 @@
 package org.example.touragency.repository;
 
-import org.example.touragency.model.enity.Rating;
-import org.example.touragency.model.enity.RatingCounter;
+import org.example.touragency.model.entity.Rating;
+import org.example.touragency.model.entity.RatingCounter;
+import org.hibernate.SessionFactory;
 import org.springframework.stereotype.Repository;
+import static org.example.touragency.constant.QueryConstants.*;
 
-import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Repository
-public class RatingRepository {
-    private final Map<UUID, Rating> ratings = new ConcurrentHashMap<>();
-    private final Map<UUID, RatingCounter> ratingCounters = new ConcurrentHashMap<>();
+public class RatingRepository extends AbstractHibernateRepository{
 
-    public void addRating(Rating rating) {
-        ratings.put(rating.getId(), rating);
+    protected RatingRepository(SessionFactory sessionFactory) {
+        super(sessionFactory);
     }
 
-    public void addRatingCounter(RatingCounter ratingCounter) {
-        ratingCounters.put(ratingCounter.getId(), ratingCounter);
+    public void saveRating(Rating rating) {
+        executeInTransaction(session -> {
+            session.persist(rating);
+            return rating;
+        });
     }
 
-    public void updateRating(Rating rating) {
-        ratings.remove(rating.getId());
-        ratings.put(rating.getId(), rating);
+    public void saveCounter(RatingCounter ratingCounter) {
+        executeInTransaction(session -> {
+            session.persist(ratingCounter);
+            return ratingCounter;
+        });
     }
 
-    public void updateRatingCounter(RatingCounter ratingCounter) {
-        ratingCounters.remove(ratingCounter.getTourId());
-        ratingCounters.put(ratingCounter.getTourId(), ratingCounter);
+
+    public Rating updateRating(Rating rating) {
+        return executeInTransaction(session ->
+            session.merge(rating)
+        );
     }
 
-    public RatingCounter getRatingCounter(UUID tourId) {
-        return ratingCounters.get(tourId);
+    public void updateCounter(RatingCounter counter) {
+        executeInTransaction(session ->
+            session.merge(counter)
+        );
     }
 
-    public Rating findRatingByUserAndTourIds(UUID userId, UUID tourId) {
-        return ratings.values().stream()
-                .filter(r -> r.getTourId().equals(tourId) && r.getUserId().equals(userId))
-                .findFirst()
-                .orElse(null);
+
+    public Optional<Rating> findRatingByUserAndTourIds(UUID userId, UUID tourId){
+        return executeInTransaction(session ->
+                session.createQuery("FROM Rating WHERE userId = :userId AND tourId = :tourId", Rating.class)
+                        .setParameter(USER_ID, userId)
+                        .setParameter(TOUR_ID, tourId)
+                        .uniqueResultOptional()
+        );
     }
 
-    public RatingCounter findRatingCounterByTourId(UUID tourId) {
-        return  ratingCounters.values().stream()
-                .filter(r -> r.getTourId().equals(tourId))
-                .findFirst()
-                .orElse(null);
+
+    public Optional<RatingCounter> findRatingCounterByTourId(UUID tourId){
+        return executeInTransaction( session ->
+                session.createQuery("FROM RatingCounter WHERE tourId =: tourId", RatingCounter.class)
+                        .setParameter(TOUR_ID, tourId)
+                        .uniqueResultOptional()
+        );
     }
 
+    public void deleteAllCountersIfTourDeleted(UUID tourId) {
+        executeInTransactionVoid(session ->
+            session.createMutationQuery("DELETE FROM RatingCounter WHERE tourId = :tourId")
+                    .setParameter(TOUR_ID, tourId)
+                    .executeUpdate()
+        );
+    }
+
+    public void deleteAllRatingsIfTourDeleted(UUID tourId) {
+        executeInTransactionVoid(session ->
+            session.createMutationQuery("DELETE FROM Rating WHERE tourId = :tourId")
+                    .setParameter(TOUR_ID, tourId)
+                    .executeUpdate()
+        );
+    }
+
+    public void deleteAllIfUserDeleted(UUID userId){
+        executeInTransactionVoid(session ->
+            session.createMutationQuery("DELETE FROM Rating WHERE userId = :userId")
+                    .setParameter(USER_ID, userId)
+                    .executeUpdate()
+        );
+    }
 
 
 }

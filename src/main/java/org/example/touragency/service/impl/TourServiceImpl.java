@@ -4,12 +4,14 @@ import lombok.RequiredArgsConstructor;
 import org.example.touragency.dto.request.TourAddDto;
 import org.example.touragency.dto.response.TourResponseDto;
 import org.example.touragency.dto.response.TourUpdateDto;
+import org.example.touragency.exception.BadRequestException;
+import org.example.touragency.exception.ConflictException;
+import org.example.touragency.exception.ForbiddenException;
+import org.example.touragency.exception.NotFoundException;
 import org.example.touragency.model.Role;
-import org.example.touragency.model.enity.Tour;
-import org.example.touragency.model.enity.User;
-import org.example.touragency.repository.FavTourRepository;
-import org.example.touragency.repository.TourRepository;
-import org.example.touragency.repository.UserRepository;
+import org.example.touragency.model.entity.Tour;
+import org.example.touragency.model.entity.User;
+import org.example.touragency.repository.*;
 import org.example.touragency.service.abstractions.TourService;
 import org.springframework.stereotype.Service;
 
@@ -17,6 +19,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -25,27 +28,31 @@ public class TourServiceImpl implements TourService {
 
     private final TourRepository tourRepository;
     private final UserRepository userRepository;
+    private final RatingRepository ratingRepository;
     private final FavTourRepository favTourRepository;
+    private final BookingRepository bookingRepository;
+
 
 
     @Override
-    public Tour addNewTour(UUID agencyId, TourAddDto tourAddDto) {
+    public TourResponseDto addNewTour(UUID agencyId, TourAddDto tourAddDto) {
 
-        User agency = userRepository.getUserById(agencyId);
+        Optional<User> agency = userRepository.findById(agencyId);
 
-        if (agency == null) {
-            throw new RuntimeException("Agency not found");
+        if (agency.isEmpty()) {
+            throw new NotFoundException("Agency not found");
         }
 
-        if (!agency.getRole().equals(Role.AGENCY)) {
-            throw new RuntimeException("User is not an agency");
+        if (!agency.get().getRole().equals(Role.AGENCY)) {
+            throw new ConflictException("User is not an agency");
         }
 
         int nights = calculatingNights(tourAddDto.getStartDate(), tourAddDto.getReturnDate());
 
+
         Tour newTour = Tour.builder()
                 .title(tourAddDto.getTitle())
-                .agencyId(agencyId)
+                .agency(agency.get())
                 .city(tourAddDto.getCity())
                 .hotel(tourAddDto.getHotel())
                 .description(tourAddDto.getDescription())
@@ -59,76 +66,96 @@ public class TourServiceImpl implements TourService {
                 .views(0L)
                 .build();
 
-        tourRepository.addTour(newTour);
-        return newTour;
+                 tourRepository.save(newTour);
+                 return toResponseDto(newTour);
+
     }
 
 
     @Override
     public void deleteTour(UUID agencyId, UUID tourId) {
+        Optional<User> agency = userRepository.findById(agencyId);
 
-        User agency = userRepository.getUserById(agencyId);
-
-        if(agency.getRole().equals(Role.AGENCY) && tourId != null) {
-            favTourRepository.deleteAllFavToursIfTourDeleted(tourId);
-            tourRepository.deleteTour(tourId);
+        if (agency.isEmpty()) {
+            throw new NotFoundException("Agency not found");
         }
+
+        if (!agency.get().getRole().equals(Role.AGENCY)) {
+            throw new ForbiddenException("User is not an agency");
+        }
+
+        ratingRepository.deleteAllRatingsIfTourDeleted(tourId);
+        ratingRepository.deleteAllCountersIfTourDeleted(tourId);
+        favTourRepository.deleteAllIfTourDeleted(tourId);
+        bookingRepository.deleteAllIfTourDeleted(tourId);
+        tourRepository.deleteById(tourId);
+
     }
 
+
     @Override
-    public Tour updateTour(UUID agencyId, UUID tourId, TourUpdateDto tourUpdateDto) {
+    public TourResponseDto updateTour(UUID agencyId, UUID tourId, TourUpdateDto tourUpdateDto) {
 
-        Tour existingTour = tourRepository.getTourById(tourId);
+        Optional<Tour> existingTour = tourRepository.findById(tourId);
 
-        if(existingTour == null) {
-            throw new RuntimeException("Tour not found");
+        if(existingTour.isEmpty()) {
+            throw new NotFoundException("Tour not found");
         }
 
-        if(!existingTour.getAgencyId().equals(agencyId)) {
-            throw new RuntimeException("Agency not found");
+        if(!existingTour.get().getAgency().getId().equals(agencyId)) {
+            throw new NotFoundException("Agency not found");
         }
         Integer nights = calculatingNights(tourUpdateDto.getStartDate(), tourUpdateDto.getReturnDate());
 
-        existingTour.setTitle(tourUpdateDto.getTitle());
-        existingTour.setDescription(tourUpdateDto.getDescription());
-        existingTour.setCity(tourUpdateDto.getCity());
-        existingTour.setPrice(tourUpdateDto.getPrice());
-        existingTour.setSeatsTotal(tourUpdateDto.getSeatsTotal());
-        existingTour.setSeatsAvailable(tourUpdateDto.getSeatsTotal());
-        existingTour.setStartDate(tourUpdateDto.getStartDate());
-        existingTour.setReturnDate(tourUpdateDto.getReturnDate());
-        existingTour.setNights(nights);
-        existingTour.setHotel(tourUpdateDto.getHotel());
-        return  existingTour;
+        existingTour.get().setTitle(tourUpdateDto.getTitle());
+        existingTour.get().setDescription(tourUpdateDto.getDescription());
+        existingTour.get().setCity(tourUpdateDto.getCity());
+        existingTour.get().setPrice(tourUpdateDto.getPrice());
+        existingTour.get().setSeatsTotal(tourUpdateDto.getSeatsTotal());
+        existingTour.get().setSeatsAvailable(tourUpdateDto.getSeatsTotal());
+        existingTour.get().setStartDate(tourUpdateDto.getStartDate());
+        existingTour.get().setReturnDate(tourUpdateDto.getReturnDate());
+        existingTour.get().setNights(nights);
+        existingTour.get().setHotel(tourUpdateDto.getHotel());
+        tourRepository.update(existingTour.get());
+        return toResponseDto(existingTour.get());
     }
 
     @Override
     public List<TourResponseDto> getAllTours() {
-        return tourRepository.getAllTours().stream()
+        return tourRepository.findAll().stream()
                 .map(this::toResponseDto)
                 .toList();
     }
 
     @Override
     public TourResponseDto getTourById(UUID userId, UUID tourId) {
-        Tour tour = tourRepository.getTourById(tourId);
-        if(tour == null) {
-            throw new RuntimeException("Tour not found");
+        Optional<Tour> tour = tourRepository.findById(tourId);
+        if(tour.isEmpty()) {
+            throw new NotFoundException("Tour not found");
         }
 
-        User user = userRepository.getUserById(userId);
-        if(user == null) {
-            throw new RuntimeException("User not found");
+        Optional<User> user = userRepository.findById(userId);
+        if(user.isEmpty()) {
+            throw new NotFoundException("User not found");
         }
 
-        tour.setViews(tour.getViews() + 1L);
-        return toResponseDto(tour);
+        tour.get().setViews(tour.get().getViews() + 1L);
+        return toResponseDto(tour.orElse(null));
     }
 
     @Override
     public List<TourResponseDto> getAllToursByAgencyId(UUID agencyId) {
-        return tourRepository.getAllTours().stream()
-                .filter(tour -> tour.getAgencyId().equals(agencyId))
+
+        User agency = userRepository.findById(agencyId)
+                .orElseThrow(() -> new NotFoundException("Agency not found"));
+
+        if(!agency.getRole().equals(Role.AGENCY)) {
+            throw new ForbiddenException("User is not an agency");
+        }
+
+        return tourRepository.findAll().stream()
+                .filter(tour -> tour.getAgency().getId().equals(agencyId))
                 .map(this::toResponseDto)
                 .toList();
     }
@@ -140,48 +167,60 @@ public class TourServiceImpl implements TourService {
             if(tour.getSeatsAvailable() == 0){
                 tour.setAvailable(false);
             }
+            tourRepository.update(tour);
         }
     }
     @Override
     public void tourBookingIsCanceled(UUID tourId) {
-        Tour tour = tourRepository.getTourById(tourId);
-        tour.setSeatsAvailable(tour.getSeatsAvailable() + 1);
-        if(tour.getSeatsAvailable() == 0){
-            tour.setAvailable(true);
+        Optional<Tour> tour = tourRepository.findById(tourId);
+
+        if(tour.isEmpty()) {
+            throw new NotFoundException("Tour not found");
         }
+
+        if(tour.get().getSeatsAvailable() == 0){
+            tour.get().setAvailable(true);
+        }
+        tour.get().setSeatsAvailable(tour.get().getSeatsAvailable() + 1);
+        tourRepository.update(tour.get());
     }
 
     @Override
     public TourResponseDto addDiscount(UUID agencyId, UUID tourId, Integer discountPercent) {
-        User admin =  userRepository.getUserById(agencyId);
-        Tour tour = tourRepository.getTourById(tourId);
+        Optional<User> admin =  userRepository.findById(agencyId);
+        Optional<Tour> tour = tourRepository.findById(tourId);
 
-        if(tour == null || admin == null) {
-            throw new RuntimeException("Tour or User not found");
+        if(tour.isEmpty() || admin.isEmpty()) {
+            throw new NotFoundException("Tour or User not found");
         }
         if(discountPercent < 0 || discountPercent > 100) {
-            throw new RuntimeException("Invalid discount percent");
+            throw new BadRequestException("Invalid discount percent");
         }
-        if(!tour.getAgencyId().equals(agencyId)) {
-            throw new RuntimeException("Agency not found");
+        if(!tour.get().getAgency().getId().equals(agencyId)) {
+            throw new NotFoundException("Agency not found");
         }
 
-        tour.setDiscountPercent(discountPercent);
-        tour.setPriceWithDiscount(
-                tour.getPrice().multiply(
-                        BigDecimal.valueOf(100 - discountPercent)
-                ).divide(BigDecimal.valueOf(100))
+        tour.get().setDiscountPercent(discountPercent);
+        tour.get().setPriceWithDiscount(
+                tour.get().getPrice().multiply(
+                        BigDecimal.valueOf(100f - discountPercent)
+                ).divide(BigDecimal.valueOf(100f))
         );
-        return toResponseDto(tour);
+        tourRepository.update(tour.get());
+        return toResponseDto(tour.orElse(null));
 
     }
 
     private TourResponseDto toResponseDto(Tour tour) {
-        User agency = userRepository.getUserById(tour.getAgencyId());
+        Optional<User> agency = userRepository.findById(tour.getAgency().getId());
+
+        if(agency.isEmpty()) {
+            throw new NotFoundException("Agency not found");
+        }
         return TourResponseDto.builder()
                 .id(tour.getId())
-                .agencyName(agency.getFullName())
-                .agencyId(agency.getId())
+                .agencyName(agency.get().getFullName())
+                .agencyId(agency.get().getId())
                 .title(tour.getTitle())
                 .description(tour.getDescription())
                 .nights(calculatingNights(tour.getStartDate(), tour.getReturnDate()))
@@ -201,13 +240,13 @@ public class TourServiceImpl implements TourService {
 
     private Integer calculatingNights(LocalDate startDate, LocalDate returnDate) {
         if (returnDate.isBefore(startDate)) {
-            throw new IllegalArgumentException("Qaytish kuni ketish kunidan vohli bo'lmasligi kerak!");
+            throw new IllegalArgumentException("Return date must not be before start date!");
         }
 
         int nights = (int) ChronoUnit.DAYS.between(startDate, returnDate);
 
         if (nights <= 0) {
-            throw new IllegalArgumentException("Tur kamida 1 kun davom etishi kerak!");
+            throw new IllegalArgumentException("Tour must have at least one night!");
         }
         return nights;
     }

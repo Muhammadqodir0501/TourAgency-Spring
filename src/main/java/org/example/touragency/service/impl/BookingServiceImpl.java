@@ -1,13 +1,17 @@
 package org.example.touragency.service.impl;
 
 import lombok.RequiredArgsConstructor;
-import org.example.touragency.model.enity.Booking;
-import org.example.touragency.model.enity.Tour;
-import org.example.touragency.model.enity.User;
+import org.example.touragency.dto.response.BookingResponseDto;
+import org.example.touragency.exception.ConflictException;
+import org.example.touragency.exception.NotFoundException;
+import org.example.touragency.model.entity.Booking;
+import org.example.touragency.model.entity.Tour;
+import org.example.touragency.model.entity.User;
 import org.example.touragency.repository.BookingRepository;
 import org.example.touragency.repository.TourRepository;
 import org.example.touragency.repository.UserRepository;
 import org.example.touragency.service.abstractions.BookingService;
+import org.example.touragency.service.abstractions.TourService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -20,43 +24,70 @@ public class BookingServiceImpl implements BookingService {
     private final BookingRepository bookingRepository;
     private final UserRepository userRepository;
     private final TourRepository tourRepository;
-    private final TourServiceImpl tourServiceImpl;
+    private final TourService tourService;
 
     @Override
-    public Booking addBooking(UUID userId, UUID tourId) {
+    public BookingResponseDto addBooking(UUID userId, UUID tourId) {
 
-        Tour existTour = tourRepository.getTourById(tourId);
-        if(existTour == null) {
-            throw new RuntimeException("Tour not found");
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("User not found"));
+
+        Tour tour = tourRepository.findById(tourId)
+                .orElseThrow(() -> new NotFoundException("Tour not found"));
+
+        if (!tour.isAvailable()) {
+            throw new ConflictException("Tour not available");
         }
 
-        User existUser = userRepository.getUserById(userId);
-        if(existUser == null) {
-            throw new RuntimeException("User not found");
+        boolean alreadyBooked =
+                bookingRepository.findBookingByUserAndTourId(userId, tourId).isPresent();
+
+        if (alreadyBooked) {
+            throw new ConflictException("User already booked this tour");
         }
 
-        if(!existTour.isAvailable()) {
-            throw new RuntimeException("Tour not available");
-        }
-        Booking newBooking = Booking.builder()
-                .userId(existUser.getId())
-                .tourId(existTour.getId())
+        Booking booking = Booking.builder()
+                .user(user)
+                .tour(tour)
                 .build();
 
-        bookingRepository.addBooking(newBooking);
-        tourServiceImpl.tourIsBooked(existTour);
+        bookingRepository.save(booking);
+        tourService.tourIsBooked(tour);
 
-        return newBooking;
+        return new BookingResponseDto(
+                booking.getId(),
+                user.getId(),
+                tour.getId()
+        );
     }
+
 
     @Override
-    public List<Booking> getUsersBookings(UUID userId) {
-        return bookingRepository.getUsersBookings(userId);
+    public List<BookingResponseDto> getUsersBookings(UUID userId) {
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("User not found"));
+
+        List<Booking> bookings = bookingRepository.findAllBookingsByUserId(user.getId());
+
+        return bookings.stream()
+                .map(b -> new BookingResponseDto(
+                        b.getId(),
+                        b.getUser().getId(),
+                        b.getTour().getId()
+                ))
+                .toList();
     }
+
 
     @Override
     public void cancelBooking(UUID userId, UUID tourId) {
-        tourServiceImpl.tourBookingIsCanceled(tourId);
-        bookingRepository.removeBooking(userId, tourId);
+
+        bookingRepository.findBookingByUserAndTourId(userId, tourId)
+                .orElseThrow(() -> new NotFoundException("Booking not found"));
+
+        tourService.tourBookingIsCanceled(tourId);
+        bookingRepository.deleteByUserIdAndTourId(userId, tourId);
     }
+
 }
