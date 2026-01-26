@@ -70,6 +70,7 @@ public class HibernateConfig {
         sources.addAnnotatedClass(org.example.touragency.model.entity.FavouriteTour.class);
         sources.addAnnotatedClass(org.example.touragency.model.entity.Rating.class);
         sources.addAnnotatedClass(org.example.touragency.model.entity.RatingCounter.class);
+        sources.addAnnotatedClass(org.example.touragency.model.entity.RefreshToken.class);
 
         return sources.buildMetadata().buildSessionFactory();
     }
