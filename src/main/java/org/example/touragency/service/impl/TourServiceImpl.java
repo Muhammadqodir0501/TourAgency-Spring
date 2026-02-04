@@ -13,6 +13,7 @@ import org.example.touragency.model.entity.Tour;
 import org.example.touragency.model.entity.User;
 import org.example.touragency.repository.*;
 import org.example.touragency.service.abstractions.TourService;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -34,6 +35,7 @@ public class TourServiceImpl implements TourService {
 
 
 
+    @PreAuthorize("hasRole('AGENCY')")
     @Override
     public TourResponseDto addNewTour(UUID agencyId, TourAddDto tourAddDto) {
 
@@ -72,6 +74,7 @@ public class TourServiceImpl implements TourService {
     }
 
 
+    @PreAuthorize("hasRole('AGENCY')")
     @Override
     public void deleteTour(UUID agencyId, UUID tourId) {
         Optional<User> agency = userRepository.findById(agencyId);
@@ -93,6 +96,7 @@ public class TourServiceImpl implements TourService {
     }
 
 
+    @PreAuthorize("hasRole('AGENCY')")
     @Override
     public TourResponseDto updateTour(UUID agencyId, UUID tourId, TourUpdateDto tourUpdateDto) {
 
@@ -144,6 +148,7 @@ public class TourServiceImpl implements TourService {
         return toResponseDto(tour.orElse(null));
     }
 
+    @PreAuthorize("hasRole('AGENCY')")
     @Override
     public List<TourResponseDto> getAllToursByAgencyId(UUID agencyId) {
 
@@ -185,6 +190,7 @@ public class TourServiceImpl implements TourService {
         tourRepository.update(tour.get());
     }
 
+    @PreAuthorize("hasRole('AGENCY')")
     @Override
     public TourResponseDto addDiscount(UUID agencyId, UUID tourId, Integer discountPercent) {
         Optional<User> admin =  userRepository.findById(agencyId);

@@ -13,7 +13,7 @@ import java.util.UUID;
 public class JwtUtil {
 
     private static final String SECRET = "very-very-secret-key-for-jwt-32bytes";
-    private static final long EXPIRATION = 1000 * 60 * 60 * 24; // 1 день
+    private static final long EXPIRATION = 1000 * 60 * 60 * 24;
 
     private static final Key KEY = Keys.hmacShaKeyFor(SECRET.getBytes());
 
